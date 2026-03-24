@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Пока что только идея</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+      position: relative;
+      height: 100vh;
+    }
+
+    /* ТУМАН */
+    .fog {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: 
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent 70%),
+        radial-gradient(circle at 70% 70%, rgba(200,200,255,0.07), transparent 70%),
+        radial-gradient(circle at 50% 50%, rgba(255,220,200,0.06), transparent 80%);
+      animation: drift 60s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0,0); }
+      50% { transform: translate(80px, -50px); }
+      100% { transform: translate(0,0); }
+    }
+
+    /* КОМЕТЫ */
+    .comet {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--color);
+      box-shadow: 0 0 10px var(--color), 0 0 20px var(--color);
+      width: 16px;
+      height: 16px;
+    }
+
+    .comet::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: var(--color);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 8px var(--color);
+    }
+
+    .comet::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -120px;
+      width: 120px;
+      height: 6px;
+      background: linear-gradient(to left, var(--color), transparent);
+      transform: translateY(-50%);
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+
+    /* АВТОРИЗАЦИЯ */
+    .box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.05);
+      padding: 30px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+      width: 300px;
+      z-index: 10;
+    }
+
+    h1 { margin-bottom: 20px; font-weight: 300; }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    button {
+      width: 48%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: white;
+      color: black;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover { opacity: 0.8; }
+
+    .row { display: flex; justify-content: space-between; }
+
+    .message { margin-top: 15px; font-size: 14px; opacity: 0.8; }
+
+    #confirmBox { display: none; margin-top: 15px; }
+
+    #confirmCode {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    #confirmButton {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: white;
+      color: black;
+      cursor: pointer;
+    }
+
+    #confirmButton:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+
+<div class="fog"></div>
+
+<div class="box">
+  <h1>Добро пожаловать!</h1>
+  <input type="email" id="email" placeholder="Почта">
+  <input type="password" id="password" placeholder="Пароль">
+
+  <div class="row">
+    <button onclick="login()">Вход</button>
+    <button onclick="register()">Регистрация</button>
+  </div>
+
+  <div id="confirmBox">
+    <input type="text" id="confirmCode" placeholder="Введите код подтверждения">
+    <button id="confirmButton" onclick="confirmCode()">Продолжить</button>
+    <div class="message" id="codeMsg"></div>
+  </div>
+
+  <div class="message" id="msg"></div>
+</div>
+
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<script>
+  // 🔑 EmailJS
+  (function(){
+    emailjs.init("5uF4Rc9FAYXB_gVeg");
+  })();
+
+  // 🌠 Кометы
+  const pastelColors = ["#d0e7ff", "#e6d0ff", "#fff5cc", "#d0fff0", "#ffd6d6"];
+  let cometInterval = null;
+
+  function createComet() {
+    const comet = document.createElement("div");
+    comet.classList.add("comet");
+    const color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+    comet.style.setProperty("--color", color);
+    comet.style.top = Math.random() * window.innerHeight + "px";
+    comet.style.left = "-150px";
+    const duration = Math.random() * 3000 + 4000;
+    const translateY = Math.random() * 300 - 150;
+    document.body.appendChild(comet);
+    comet.animate([
+      { transform: "translate(0,0)", opacity: 1 },
+      { transform: `translate(${window.innerWidth + 300}px, ${translateY}px)`, opacity: 0 }
+    ], { duration: duration, easing: "linear" });
+    setTimeout(() => comet.remove(), duration);
+  }
+
+  function startComets() {
+    if (!cometInterval) {
+      cometInterval = setInterval(createComet, 400);
+      document.querySelector(".fog").style.display = "block";
+    }
+  }
+
+  function stopComets() {
+    clearInterval(cometInterval);
+    cometInterval = null;
+    document.querySelector(".fog").style.display = "none";
+  }
+
+  // 🔐 Авторизация
+  let currentEmail = null;
+
+  function login() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    const saved = JSON.parse(localStorage.getItem(email));
+
+    if (saved && saved.password === pass) {
+      document.getElementById("msg").innerText = "Успешный вход ✅";
+      createDashboard(email);
+    } else {
+      document.getElementById("msg").innerText = "Неверные данные ❌";
+    }
+  }
+
+  function register() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    if (!email || !pass) {
+      document.getElementById("msg").innerText = "Заполни поля";
+      return;
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000);
+    localStorage.setItem("verify_code_" + email, code);
+    localStorage.setItem("verify_pass_" + email, pass);
+    currentEmail = email;
+
+    emailjs.send("Moxsin", "template_2474a3l", {
+      to_email: email,
+      code: code
+    }).then(() => {
+      document.getElementById("msg").innerText = "Код отправлен на почту 📩";
+    }).catch(() => {
+      document.getElementById("msg").innerText = "Ошибка отправки ❌";
+    });
+
+    document.getElementById("confirmBox").style.display = "block";
+  }
+
+  function confirmCode() {
+    const input = document.getElementById("confirmCode").value;
+    const savedCode = localStorage.getItem("verify_code_" + currentEmail);
+    const savedPass = localStorage.getItem("verify_pass_" + currentEmail);
+
+    if (input === savedCode) {
+      localStorage.setItem(currentEmail, JSON.stringify({ password: savedPass }));
+      document.getElementById("codeMsg").innerText = "Регистрация подтверждена ✅";
+      localStorage.removeItem("verify_code_" + currentEmail);
+      localStorage.removeItem("verify_pass_" + currentEmail);
+      document.getElementById("confirmBox").style.display = "none";
+    } else {
+      document.getElementById("codeMsg").innerText = "Неверный код ❌";
+    }
+  }
+
+  // 🌌 Космическая панель после входа
+  function createDashboard(email) {
+    document.querySelector(".box").style.display = "none";
+
+    // Центральная панель
+    const panel = document.createElement("div");
+    panel.id = "cosmoPanel";
+    panel.style.position = "absolute";
+    panel.style.top = "50%";
+    panel.style.left = "50%";
+    panel.style.transform = "translate(-50%, -50%)";
+    panel.style.width = "400px";
+    panel.style.height = "250px";
+    panel.style.background = "rgba(0,0,0,0.85)";
+    panel.style.borderRadius = "20px";
+    panel.style.padding = "20px";
+    panel.style.color = "white";
+    panel.style.zIndex = "20";
+    panel.style.boxShadow = "0 0 30px rgba(255,255,255,0.2)";
+    panel.style.opacity = "0";
+    panel.style.transition = "opacity 1s ease";
+    panel.innerHTML = `<h2 style="text-align:center;">Добро пожаловать!</h2>`;
+    document.body.appendChild(panel);
+    setTimeout(() => panel.style.opacity = "1", 50);
+
+    // Виджет профиля (верхний правый угол)
+    const widget = document.createElement("div");
+    widget.id = "profileWidget";
+    widget.style.position = "absolute";
+    widget.style.top = "20px";
+    widget.style.right = "20px";
+    widget.style.width = "200px";
+    widget.style.background = "rgba(0,0,0,0.85)";
+    widget.style.borderRadius = "20px";
+    widget.style.padding = "15px";
+    widget.style.color = "white";
+    widget.style.zIndex = "25";
+    widget.style.boxShadow = "0 0 20px rgba(255,255,255,0.2)";
+    widget.style.opacity = "0";
+    widget.style.transition = "opacity 1s ease";
+
+    const profileBtn = document.createElement("button");
+    profileBtn.innerText = "Профиль";
+    profileBtn.style.width = "100%";
+    profileBtn.style.padding = "8px";
+    profileBtn.style.border = "none";
+    profileBtn.style.borderRadius = "10px";
+    profileBtn.style.cursor = "pointer";
+    profileBtn.onclick = () => openProfile(email);
+    widget.appendChild(profileBtn);
+    document.body.appendChild(widget);
+    setTimeout(() => widget.style.opacity = "1", 300);
+
+    // Применяем тему (по умолчанию или сохранённую)
+    const theme = localStorage.getItem(email + "_theme") || "dark";
+    applyTheme(theme);
+  }
+
+  function openProfile(email) {
+    const widget = document.getElementById("profileWidget");
+    widget.innerHTML = "";
+
+    const title = document.createElement("h3");
+    title.innerText = "Ваш профиль";
+    title.style.textAlign = "center";
+    widget.appendChild(title);
+
+    // Аватар
+    const avatar = document.createElement("input");
+    avatar.type = "file";
+    avatar.accept = "image/*";
+    avatar.style.marginTop = "5px";
+    avatar.onchange = (e) => {
+      const reader = new FileReader();
+      reader.onload = function() {
+        localStorage.setItem(email + "_avatar", reader.result);
+        avatarPreview.src = reader.result;
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    };
+    widget.appendChild(avatar);
+
+    const avatarPreview = document.createElement("img");
+    avatarPreview.src = localStorage.getItem(email + "_avatar") || "";
+    avatarPreview.style.width = "80px";
+    avatarPreview.style.height = "80px";
+    avatarPreview.style.borderRadius = "50%";
+    avatarPreview.style.display = "block";
+    avatarPreview.style.margin = "10px auto";
+    widget.appendChild(avatarPreview);
+
+    // Тема
+    const themeLabel = document.createElement("label");
+    themeLabel.innerText = "Тема: ";
+    const themeSelect = document.createElement("select");
+    const light = document.createElement("option");
+    light.value = "light"; light.innerText = "Светлая";
+    const dark = document.createElement("option");
+    dark.value = "dark"; dark.innerText = "Темная";
+    themeSelect.appendChild(light); themeSelect.appendChild(dark);
+    themeSelect.value = localStorage.getItem(email + "_theme") || "dark";
+    themeSelect.onchange = () => {
+      const theme = themeSelect.value;
+      localStorage.setItem(email + "_theme", theme);
+      applyTheme(theme);
+    };
+    themeLabel.appendChild(themeSelect);
+    widget.appendChild(themeLabel);
+
+    // Описание
+    const desc = document.createElement("textarea");
+    desc.placeholder = "Добавьте описание...";
+    desc.style.width = "100%";
+    desc.style.height = "50px";
+    desc.style.marginTop = "5px";
+    desc.value = localStorage.getItem(email + "_desc") || "";
+    desc.onchange = () => localStorage.setItem(email + "_desc", desc.value);
+    widget.appendChild(desc);
+
+    const backBtn = document.createElement("button");
+    backBtn.innerText = "Закрыть";
+    backBtn.style.width = "100%";
+    backBtn.style.marginTop = "8px";
+    backBtn.onclick = () => {
+      widget.innerHTML = "";
+      const profileBtn = document.createElement("button");
+      profileBtn.innerText = "Профиль";
+      profileBtn.style.width = "100%";
+      profileBtn.style.padding = "8px";
+      profileBtn.style.border = "none";
+      profileBtn.style.borderRadius = "10px";
+      profileBtn.style.cursor = "pointer";
+      profileBtn.onclick = () => openProfile(email);
+      widget.appendChild(profileBtn);
+    };
+    widget.appendChild(backBtn);
+  }
+
+  function applyTheme(theme) {
+    if (theme === "light") {
+      document.body.style.background = "#fdfdfd"; // мягкий светлый фон
+      document.body.style.color = "#333";         // тёмно-серый текст
+      stopComets(); // убираем кометы и туман
+    } else {
+      document.body.style.background = "black";
+      document.body.style.color = "white";
+      startComets(); // включаем кометы и туман
+    }
+  }
+
+  // Старт комет на форме входа
+  startComets();
+</script>
+
+</body>
+</html>
