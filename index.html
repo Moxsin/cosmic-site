@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Космический сайт</title>
+<link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {
@@ -44,7 +45,6 @@ body {
   background:linear-gradient(to left,var(--color),transparent);transform:translateY(-50%);
   border-radius:50%;opacity:0.8;
 }
-
 .box {
   position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   background: rgba(255,255,255,0.05);padding:20px;border-radius:20px;
@@ -60,12 +60,10 @@ button:hover{opacity:0.8;}
 #confirmCode{width:100%;padding:8px;margin-top:10px;border-radius:10px;border:none;outline:none;background:rgba(255,255,255,0.1);color:white;}
 #confirmButton{width:100%;padding:10px;margin-top:10px;border:none;border-radius:10px;background:white;color:black;cursor:pointer;}
 #confirmButton:hover{opacity:0.8;}
-
 #greeting {
   position:absolute;top:20px;left:50%;transform:translateX(-50%);
   font-size:20px;font-weight:500;color:white;z-index:30;text-align:center;
 }
-
 #cosmoPanel {
   position:absolute;top:60px;left:50%;transform:translateX(-50%);
   width:90%;max-width:650px;padding:20px;background: rgba(0,0,0,0.85);
@@ -73,32 +71,18 @@ button:hover{opacity:0.8;}
   opacity:0;transition:opacity 1s ease;
   display:flex;flex-direction:row;max-height:75vh;overflow:hidden;
 }
-#noteList {
-  width:35%;border-right:1px solid rgba(255,255,255,0.3);padding-right:10px;overflow-y:auto;
-}
+#noteList { width:35%;border-right:1px solid rgba(255,255,255,0.3);padding-right:10px;overflow-y:auto; }
 #noteContent {
   width:65%;padding:10px;overflow-y:auto;
-  height:500px; /* увеличенная высота текста */
+  height:500px;
   background: rgba(255,255,255,0.05);
   border-radius:10px;
   box-sizing:border-box;
 }
 .note-title-item {padding:6px;cursor:pointer;border-radius:8px;margin-bottom:5px;background:rgba(255,255,255,0.1);}
 .note-title-item:hover {background:rgba(255,255,255,0.2);}
-
-#createNoteBtn {
-  width:180px; /* фиксированная ширина */
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  background:white;
-  color:black;
-  cursor:pointer;
-  transition:0.3s;
-}
+#createNoteBtn { width:180px; margin-top:10px; padding:10px; border-radius:10px; border:none; background:white; color:black; cursor:pointer; transition:0.3s; }
 #createNoteBtn:hover { opacity:0.8; }
-
 #profileWidget {
   position:absolute;top:20px;right:20px;width:90%;max-width:220px;background: rgba(0,0,0,0.85);
   border-radius:20px;padding:15px;color:white;z-index:25;box-shadow:0 0 20px rgba(255,255,255,0.2);
@@ -119,12 +103,9 @@ select option {color:black;background:white;}
     <button onclick="login()">Вход</button>
     <button onclick="register()">Регистрация</button>
   </div>
-
-  <!-- Добавленный блок партнера -->
   <div class="message" style="margin-top:10px; font-size:14px; opacity:0.8;">
     Главный партнер: <a href="https://roks4n.github.io/DiaryESPAD/" target="_blank" style="color:#ffd700; text-decoration:underline;">ESPAD</a>
   </div>
-
   <div id="confirmBox">
     <input type="text" id="confirmCode" placeholder="Введите код подтверждения">
     <button id="confirmButton" onclick="confirmCode()">Продолжить</button>
@@ -141,7 +122,6 @@ select option {color:black;background:white;}
 const pastelColors=["#d0e7ff","#e6d0ff","#fff5cc","#d0fff0","#ffd6d6"];
 let cometInterval=null;
 const greetings=["Привет, чем сегодня займемся?","Привет, что нового?"];
-
 function createComet(){
   const c=document.createElement("div");c.classList.add("comet");
   const color=pastelColors[Math.floor(Math.random()*pastelColors.length)];
@@ -190,7 +170,6 @@ function createDashboard(email){
   document.querySelector(".box").style.display="none";
   const greeting = greetings[Math.floor(Math.random()*greetings.length)];
   document.getElementById("greeting").innerText = greeting;
-
   const panel=document.createElement("div");panel.id="cosmoPanel";
   panel.innerHTML=`<div id="noteList"></div><div id="noteContent">Выберите заметку</div>`;
   const addNoteBtn=document.createElement("button");
@@ -233,14 +212,11 @@ function displayNotes(email){
 function openProfile(email){
   const widget=document.getElementById("profileWidget");widget.innerHTML="";
   const title=document.createElement("h3");title.innerText="Ваш профиль"; title.style.textAlign="center"; widget.appendChild(title);
-
   const nickLabel=document.createElement("label");nickLabel.innerText="Имя: "; nickLabel.style.display="block"; widget.appendChild(nickLabel);
   const nickInput=document.createElement("input");nickInput.type="text"; nickInput.placeholder="Введите имя";nickInput.value=localStorage.getItem(email+"_nickname")||"";nickInput.onchange=()=>localStorage.setItem(email+"_nickname",nickInput.value); widget.appendChild(nickInput);
-
   const avatar=document.createElement("input");avatar.type="file";avatar.accept="image/*";avatar.style.marginTop="5px";
   avatar.onchange=(e)=>{const reader=new FileReader();reader.onload=function(){localStorage.setItem(email+"_avatar",reader.result);avatarPreview.src=reader.result;};reader.readAsDataURL(e.target.files[0]);};
   widget.appendChild(avatar);
-
   const avatarPreview=document.createElement("img");avatarPreview.src=localStorage.getItem(email+"_avatar")||"";avatarPreview.style.width="80px";avatarPreview.style.height="80px";avatarPreview.style.borderRadius="50%";avatarPreview.style.display="block";avatarPreview.style.margin="10px auto";widget.appendChild(avatarPreview);
 
   const themeLabel=document.createElement("label"); themeLabel.innerText="Тема: ";
