@@ -70,6 +70,7 @@ button:hover{opacity:0.8;}
   border-radius:20px;color:white;z-index:20;box-shadow:0 0 30px rgba(255,255,255,0.2);
   opacity:0;transition:opacity 1s ease;
   display:flex;flex-direction:row;max-height:75vh;overflow:hidden;
+  position: absolute;
 }
 #noteList { width:35%;border-right:1px solid rgba(255,255,255,0.3);padding-right:10px;overflow-y:auto; }
 #noteContent {
@@ -81,8 +82,36 @@ button:hover{opacity:0.8;}
 }
 .note-title-item {padding:6px;cursor:pointer;border-radius:8px;margin-bottom:5px;background:rgba(255,255,255,0.1);}
 .note-title-item:hover {background:rgba(255,255,255,0.2);}
-#createNoteBtn { width:180px; margin-top:10px; padding:10px; border-radius:10px; border:none; background:white; color:black; cursor:pointer; transition:0.3s; }
-#createNoteBtn:hover { opacity:0.8; }
+#createNoteBtn {
+  width: 180px;
+  height: 40px;
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+
+  border-radius: 10px;
+  border: none;
+  background: white;
+  color: black;
+  cursor: pointer;
+  transition: 0.3s;
+  z-index: 30;
+}
+.note-title-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 8px;
+  margin-bottom: 6px;
+
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  cursor: pointer;
+}
+#createNoteBtn:hover {
+  opacity: 0.8;
+}
 #profileWidget {
   position:absolute;top:20px;right:20px;width:90%;max-width:220px;background: rgba(0,0,0,0.85);
   border-radius:20px;padding:15px;color:white;z-index:25;box-shadow:0 0 20px rgba(255,255,255,0.2);
@@ -134,6 +163,7 @@ function createComet(){
 function startComets(){if(!cometInterval){cometInterval=setInterval(createComet,400);document.querySelector(".fog").style.display="block";}}
 function stopComets(){clearInterval(cometInterval);cometInterval=null;document.querySelector(".fog").style.display="none";}
 let currentEmail=null;
+let currentNoteIndex = null;
 
 function login(){
   const email=document.getElementById("email").value.trim().toLowerCase();
@@ -171,12 +201,84 @@ function createDashboard(email){
   const greeting = greetings[Math.floor(Math.random()*greetings.length)];
   document.getElementById("greeting").innerText = greeting;
   const panel=document.createElement("div");panel.id="cosmoPanel";
-  panel.innerHTML=`<div id="noteList"></div><div id="noteContent">Выберите заметку</div>`;
+panel.innerHTML=`
+<div id="noteList">
+  <h3 style="margin-top:0;text-align:center;">Заметки</h3>
+</div>
+<div id="noteContent">
+  <input
+    id="noteTitle"
+    placeholder="Название заметки"
+    style="
+      width:100%;
+      padding:10px;
+      margin-bottom:10px;
+      border:none;
+      border-radius:10px;
+      background:rgba(255,255,255,0.1);
+      color:white;
+      box-sizing:border-box;
+    "
+  >
+  <textarea
+    id="noteEditor"
+    placeholder="Текст заметки..."
+    style="
+      width:100%;
+      height:380px;
+      padding:10px;
+      border:none;
+      border-radius:10px;
+      background:rgba(255,255,255,0.1);
+      color:white;
+      resize:none;
+      box-sizing:border-box;
+    "
+  ></textarea>
+  <button
+    id="saveNoteBtn"
+    style="
+      width:100%;
+      margin-top:10px;
+    "
+  >
+    💾 Сохранить
+  </button>
+</div>
+`;
+
   const addNoteBtn=document.createElement("button");
   addNoteBtn.id="createNoteBtn"; addNoteBtn.innerText="Создать новую заметку"; 
   addNoteBtn.onclick=()=>createNote(email);
   panel.appendChild(addNoteBtn);
   document.body.appendChild(panel);
+
+document.getElementById("saveNoteBtn").onclick = ()=>{
+
+  if(currentNoteIndex === null){
+    alert("Сначала выберите заметку");
+    return;
+  }
+
+  const notes = JSON.parse(
+    localStorage.getItem(email+"_notes") || "[]"
+  );
+
+  notes[currentNoteIndex].title =
+    document.getElementById("noteTitle").value;
+
+  notes[currentNoteIndex].text =
+    document.getElementById("noteEditor").value;
+
+  localStorage.setItem(
+    email+"_notes",
+    JSON.stringify(notes)
+  );
+
+  displayNotes(email);
+
+  alert("Заметка сохранена ✅");
+}; 
   setTimeout(()=>panel.style.opacity="1",50);
   displayNotes(email);
 
@@ -192,23 +294,68 @@ function createDashboard(email){
 }
 
 function createNote(email){
-  const title=prompt("Название заметки:"); if(!title) return;
-  const text=prompt("Текст заметки:"); if(text===null) return;
-  const notes=JSON.parse(localStorage.getItem(email+"_notes")||"[]");
-  notes.push({title,text}); localStorage.setItem(email+"_notes",JSON.stringify(notes));
+  const notes = JSON.parse(
+    localStorage.getItem(email+"_notes") || "[]"
+  );
+  notes.push({
+    title:"Новая заметка",
+    text:""
+  });
+  localStorage.setItem(
+    email+"_notes",
+    JSON.stringify(notes)
+  );
   displayNotes(email);
 }
 
 function displayNotes(email){
-  const noteList=document.getElementById("noteList"); noteList.innerHTML="";
-  const notes=JSON.parse(localStorage.getItem(email+"_notes")||"[]");
+  const noteList = document.getElementById("noteList");
+  noteList.innerHTML = `
+    <h3 style="margin-top:0;text-align:center;">Заметки</h3>
+  `;
+  const notes = JSON.parse(
+    localStorage.getItem(email+"_notes") || "[]"
+  );
   notes.forEach((n,i)=>{
-    const div=document.createElement("div"); div.className="note-title-item"; div.innerText=n.title;
-    div.onclick=()=>{document.getElementById("noteContent").innerText=n.text;};
+    const div = document.createElement("div");
+    div.className = "note-title-item";
+    const title = document.createElement("span");
+    title.innerText = n.title;
+    const buttons = document.createElement("div");
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "🗑";
+    delBtn.style.width = "35px";
+    delBtn.style.height = "35px";
+    delBtn.style.padding = "0";
+    delBtn.onclick = (e)=>{
+      e.stopPropagation();
+      if(confirm("Удалить заметку?")){
+        notes.splice(i,1);
+        localStorage.setItem(
+          email+"_notes",
+          JSON.stringify(notes)
+        );
+        displayNotes(email);
+        currentNoteIndex = null;
+        displayNotes(email);
+          document.getElementById("noteTitle").value = "";
+          document.getElementById("noteEditor").value = "";
+          "Выберите заметку";
+      }
+    };
+    buttons.appendChild(delBtn);
+    div.onclick = ()=>{
+  currentNoteIndex = i;
+  document.getElementById("noteTitle").value =
+    n.title;
+  document.getElementById("noteEditor").value =
+    n.text;
+};
+    div.appendChild(title);
+    div.appendChild(buttons);
     noteList.appendChild(div);
   });
 }
-
 function openProfile(email){
   const widget=document.getElementById("profileWidget");widget.innerHTML="";
   const title=document.createElement("h3");title.innerText="Ваш профиль"; title.style.textAlign="center"; widget.appendChild(title);
